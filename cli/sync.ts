@@ -14,7 +14,7 @@ import {
   type Manifest,
   type ManifestFile,
 } from "./manifest.ts";
-import { PENS_DIR, ROOT, UserError, c, confirm, parsePenRef, sha256, slugify, table } from "./util.ts";
+import { PENS_DIR, ROOT, UserError, c, confirm, idSuffix, parsePenRef, sha256, slugify, table } from "./util.ts";
 
 export function getClient(): CodePen {
   try {
@@ -80,7 +80,7 @@ async function pickSlug(pen: Pen, wanted?: string): Promise<string> {
   };
   if (await free(base)) return base;
   if (wanted) throw new UserError(`pens/${base} already exists and isn't linked to this Pen.`);
-  const suffixed = `${base}-${pen.id.replace(/-/g, "").slice(-6).toLowerCase()}`;
+  const suffixed = `${base}-${idSuffix(pen.id)}`;
   if (await free(suffixed)) return suffixed;
   throw new UserError(`Couldn't find a free folder name for "${pen.title}". Use --as <slug>.`);
 }
@@ -202,18 +202,29 @@ export async function list(client: CodePen, filters: PenFilters, opts: ListOptio
     pens = page.items;
   }
 
+  // Slugs repeat when titles do; add an id suffix to those (and to any clashing with a pulled folder).
+  const localSlugs = new Set(bySlug.values());
+  const seen = new Map<string, number>();
+  for (const pen of pens) if (!bySlug.has(pen.id)) seen.set(slugify(pen.title), (seen.get(slugify(pen.title)) ?? 0) + 1);
+  const slugFor = (pen: Pen) => {
+    const local = bySlug.get(pen.id);
+    if (local) return c.green(`${local} ✓`);
+    const base = slugify(pen.title);
+    return listSlug(pen, seen.get(base) === 1 && !localSlugs.has(base));
+  };
+
   const offset = page ? (page.page - 1) * (opts.perPage ?? 30) : 0;
-  const rows = [["#", "ID", "EDITOR", sort === "created" ? "CREATED" : "UPDATED", ...(sort === "popularity" ? ["POP."] : []), "ACCESS", "TITLE", "LOCAL"].map(c.bold)];
+  const rows = [["#", "SLUG", "ID", "EDITOR", sort === "created" ? "CREATED" : "UPDATED", ...(sort === "popularity" ? ["POP."] : []), "ACCESS", "TITLE"].map(c.bold)];
   pens.forEach((pen, i) => {
     rows.push([
       c.dim(String(offset + i + 1)),
+      slugFor(pen),
       pen.id,
       pen.editor === "V2" ? "2.0" : c.dim("Classic"),
       (sort === "created" ? pen.created_at : pen.updated_at).slice(0, 10),
       ...(sort === "popularity" ? [String(pen.popularity ?? 0)] : []),
       pen.access,
       pen.title || c.dim("(untitled)"),
-      bySlug.has(pen.id) ? c.green(`pens/${bySlug.get(pen.id)}`) : "",
     ]);
   });
   if (rows.length === 1) return console.log(page && page.page > 1 ? `No Pens on page ${page.page}.` : "No Pens found.");
@@ -224,20 +235,26 @@ export async function list(client: CodePen, filters: PenFilters, opts: ListOptio
     const hint = page.hasNext ? ` Next: --page ${page.page + 1}, or --all for every page.` : "";
     console.log(c.dim(`\nPage ${page.page}${of}, sorted by ${sort} ${opts.direction ?? "desc"}.${hint}`));
   }
+  console.log(c.dim("✓ = already pulled into pens/<slug>. Pull any Pen with `npm run cp -- pull <slug>`."));
 }
 
 /** Pulls one Pen and returns its folder slug. Pass `index` (from localIndex) when pulling many. */
+/**
+ * Pulls one Pen and returns its folder slug. `ref` is a Pen id, a codepen.io URL, the slug of a
+ * pulled Pen, or a slug as shown by `list`. Pass `index` (from localIndex) when pulling many.
+ */
 export async function pull(client: CodePen, ref: string, opts: { as?: string; force?: boolean; index?: Map<string, string> }): Promise<string> {
+  const index = opts.index ?? (await localIndex());
   let penId = parsePenRef(ref);
-  let existingSlug: string | undefined;
+  let pen: Pen | undefined;
   if (!penId) {
-    existingSlug = ref;
-    penId = (await requireLocalPen(ref)).manifest.id;
-  } else {
-    existingSlug = (opts.index ?? (await localIndex())).get(penId);
+    const local = await readManifest(path.join(PENS_DIR, ref));
+    if (local) penId = local.id;
+    else pen = await findPenBySlug(client, ref);
   }
 
-  const pen = await client.getPen(penId);
+  pen ??= await getOwnPen(client, penId!);
+  const existingSlug = index.get(pen.id);
   const slug = existingSlug && !opts.as ? existingSlug : await pickSlug(pen, opts.as);
   const dir = path.join(PENS_DIR, slug);
   const previous = await readManifest(dir);
@@ -266,6 +283,53 @@ export async function pull(client: CodePen, ref: string, opts: { as?: string; fo
     console.log(c.yellow(`  Note: the Pen's latest build on CodePen is ${pen.saved_version.build.status}.`));
   }
   return slug;
+}
+
+/** getPen, with a clearer message for the 404 CodePen gives for Pens the key can't reach. */
+async function getOwnPen(client: CodePen, id: string): Promise<Pen> {
+  try {
+    return await client.getPen(id);
+  } catch (err) {
+    if (err instanceof CodePenError && err.status === 404) {
+      throw new UserError(
+        `CodePen has no Pen ${id} that this API key can reach. Keys only reach their owner's Pens: ` +
+          `someone else's Pen (even a public one), a Team's Pen, or one you only collaborate on returns not found.`,
+      );
+    }
+    throw err;
+  }
+}
+
+/** Slug shown by `list` for a Pen: its title's slug, or that plus an id suffix when the title isn't unique. */
+const listSlug = (pen: Pen, unique: boolean) => (unique ? slugify(pen.title) : `${slugify(pen.title)}-${idSuffix(pen.id)}`);
+
+/**
+ * Finds the Pen a `list` slug refers to, using CodePen's search (fuzzy, so results are filtered to
+ * exact slug matches). Accepts "<title-slug>" and "<title-slug>-<id suffix>".
+ */
+async function findPenBySlug(client: CodePen, slug: string): Promise<Pen> {
+  const MAX_RESULTS = 500;
+  const search = async (words: string) => {
+    const found: Pen[] = [];
+    for await (const pen of client.listPens({ search_term: words.replace(/-/g, " ") })) {
+      found.push(pen);
+      if (found.length >= MAX_RESULTS) break;
+    }
+    return found;
+  };
+
+  let matches = (await search(slug)).filter((p) => slugify(p.title) === slug);
+  const suffixed = slug.match(/^(.+)-([0-9a-z]{6})$/);
+  if (!matches.length && suffixed) {
+    matches = (await search(suffixed[1])).filter((p) => slugify(p.title) === suffixed[1] && idSuffix(p.id) === suffixed[2]);
+  }
+
+  if (matches.length === 1) return matches[0];
+  if (!matches.length) {
+    throw new UserError(`No synced folder at pens/${slug}, and none of your Pens has a title matching "${slug}". Run \`npm run cp -- list\` and pull by slug or id.`);
+  }
+  const options = matches.map((p) => `  ${listSlug(p, false)}  ${c.dim(`${p.editor === "V2" ? "2.0" : "Classic"}, updated ${p.updated_at.slice(0, 10)}, ${p.id}`)}`);
+  throw new UserError(`${matches.length} of your Pens are titled like "${slug}". Pull one of these instead:\n${options.join("\n")}`);
 }
 
 export async function pullAll(client: CodePen, opts: { force?: boolean; yes?: boolean; filters: PenFilters; order?: ListOrder }) {

@@ -198,6 +198,44 @@ describe("pull / status / push", () => {
     expect(console.log).toHaveBeenCalledWith(expect.stringContaining("Couldn't download /screenshot.png"));
   });
 
+  it("pulls a Pen that isn't synced yet by its list slug", async () => {
+    const head = { pen: pen("v1"), files: V1_FILES };
+    const client = fakeClient(head);
+    const twin = { ...pen("v1"), id: "019fb3da-6330-7e45-9e8a-8771bd60c136" };
+    const fuzzy = { ...pen("v1"), id: "other", title: "Manifold Mandala 2" };
+
+    // Search is fuzzy; only exact slug matches count.
+    client.listPens.mockImplementation(async function* () {
+      yield head.pen;
+      yield fuzzy;
+    });
+    expect(await pull(client, "manifold-mandala", {})).toBe("manifold-mandala");
+    expect(client.listPens).toHaveBeenCalledWith({ search_term: "manifold mandala" });
+    expect(client.getPen).not.toHaveBeenCalled();
+    await rm(dir, { recursive: true });
+
+    // Two Pens with the same title: refuse, and offer the suffixed slugs.
+    client.listPens.mockImplementation(async function* () {
+      yield head.pen;
+      yield twin;
+    });
+    await expect(pull(client, "manifold-mandala", {})).rejects.toThrow(/2 of your Pens.*\n.*manifold-mandala-497a99[\s\S]*manifold-mandala-60c136/);
+
+    // The suffixed form picks one.
+    head.files = V1_FILES;
+    expect(await pull(client, "manifold-mandala-497a99", {})).toBe("manifold-mandala");
+    expect((await readManifest(dir))!.id).toBe(PEN_ID);
+
+    client.listPens.mockImplementation(async function* () {});
+    await expect(pull(client, "no-such-pen", {})).rejects.toThrow(/none of your Pens has a title matching/);
+  });
+
+  it("explains a 404 for a Pen the key can't reach", async () => {
+    const client = fakeClient({ pen: pen("v1"), files: V1_FILES });
+    client.getPen.mockRejectedValue(new CodePenError("not found", 404, "NOT_FOUND", null));
+    await expect(pull(client, "https://codepen.io/someone-else/pen/AbCdEfG", {})).rejects.toThrow(/Keys only reach their owner's Pens/);
+  });
+
   it("pulls Classic Pens read-only", async () => {
     const classic = pen("v1", { id: "EaNWMVY", editor: "Classic", title: "CSS 3D camera", saved_version: null });
     const client = fakeClient({ pen: classic, files: [file("a", "/index.html", "<p>hi</p>"), file("b", "/style.scss", "p{}")] });

@@ -1,0 +1,77 @@
+{
+  "id": "01a10e01-ac64-7d4c-a9d3-f08a20497a99",
+  "editor": "V2",
+  "title": "Manifold Mandala",
+  "url": "https://codepen.io/editor/shubniggurath/pen/01a10e01-ac64-7d4c-a9d3-f08a20497a99",
+  "version_id": "01a12830-1a22-7388-a14d-82cbe5fbd229",
+  "updated_at": "2026-10-10T23:40:03.813766015Z",
+  "synced_at": "2026-10-14T00:10:04.204Z",
+  "files": {
+    "/.codepen/pen.config.json": {
+      "id": "01a10e07-ef92-71a3-9ff0-7e8e9ea3bd64",
+      "hash": "09b84875e9bd41cadab88b234095ab4587056043ae3ca4a2a230acace0275728",
+      "remote_hash": "09b84875e9bd41cadab88b234095ab4587056043ae3ca4a2a230acace0275728",
+      "binary": false
+    },
+    "/index.html": {
+      "id": "01a10e07-ef92-719f-bb7d-68e42a0f4f08",
+      "hash": "a2c24b032899113e6a5fbafa46e515bdd36dc3c09b9bad193927c2bfa8901378",
+      "remote_hash": "a2c24b032899113e6a5fbafa46e515bdd36dc3c09b9bad193927c2bfa8901378",
+      "binary": false
+    },
+    "/package.json": {
+      "id": "01a10e07-ef92-71a1-ba51-53230345e508",
+      "hash": "a35d81cfbe5ff4b1974f7ed4488aa87081b5429f6658abb1b179f5843edbca48",
+      "remote_hash": "a35d81cfbe5ff4b1974f7ed4488aa87081b5429f6658abb1b179f5843edbca48",
+      "binary": false
+    },
+    "/screenshot.png": {
+      "id": "01a11c8e-40d5-711d-915b-d8f351f45fe2",
+      "hash": "5041283bba736646e1a96a55d295d72edc0b5f9fb5156f7312d8d936abb23e43",
+      "remote_hash": "5041283bba736646e1a96a55d295d72edc0b5f9fb5156f7312d8d936abb23e43",
+      "binary": true
+    },
+    "/src/main.js": {
+      "id": "01a10e07-ef92-71a0-b278-224197a5a3e4",
+      "hash": "0f448803e8a529e2f5841ad9387872efa25f8ad7848277eed2324ec4d33bd006",
+      "remote_hash": "0f448803e8a529e2f5841ad9387872efa25f8ad7848277eed2324ec4d33bd006",
+      "binary": false
+    },
+    "/src/shaders/post.frag.js": {
+      "id": "01a10e07-ef92-71a4-a75f-4b48b2907e9f",
+      "hash": "196afd055dcdea823f0137f4985a3e4ff1c2cf70f7f078065cbf8775b232bd53",
+      "remote_hash": "196afd055dcdea823f0137f4985a3e4ff1c2cf70f7f078065cbf8775b232bd53",
+      "binary": false
+    },
+    "/src/shaders/ring.frag.js": {
+      "id": "01a10e07-ef92-71a5-b436-0b4385aa5f9a",
+      "hash": "f5d71b1b178c5ea426461d1817e55bd56e945a487042d2d38c79d27e6487d0e7",
+      "remote_hash": "f5d71b1b178c5ea426461d1817e55bd56e945a487042d2d38c79d27e6487d0e7",
+      "binary": false
+    },
+    "/src/shaders/ring.vert.js": {
+      "id": "01a10e07-ef92-719e-b75a-9ec403fd691c",
+      "hash": "2da1d17431ea8c251abbf466988b9820408554f0a6b1854f1b1fce9f9eff490b",
+      "remote_hash": "2da1d17431ea8c251abbf466988b9820408554f0a6b1854f1b1fce9f9eff490b",
+      "binary": false
+    },
+    "/src/shapes.js": {
+      "id": "01a10e07-ef92-719d-ae28-2c633af2d99b",
+      "hash": "ae10a6938cfa5eb60e92762c51a6aa98c1e9870bcef699c50301660bf532fd63",
+      "remote_hash": "ae10a6938cfa5eb60e92762c51a6aa98c1e9870bcef699c50301660bf532fd63",
+      "binary": false
+    },
+    "/src/tunnel.js": {
+      "id": "01a10e07-ef92-71a2-8983-3e41123eefe6",
+      "hash": "bdd73bb628f2475276fede5a34fe077e0f183890f6ad835aab4fd87e78a26f05",
+      "remote_hash": "bdd73bb628f2475276fede5a34fe077e0f183890f6ad835aab4fd87e78a26f05",
+      "binary": false
+    },
+    "/tunnel.html": {
+      "id": "01a10e07-ef92-71a9-9e1d-80bde2388790",
+      "hash": "ed4a397f3ed79fe826e876da560475cefe20828d84f2dd955a162c28b86a2c32",
+      "remote_hash": "ed4a397f3ed79fe826e876da560475cefe20828d84f2dd955a162c28b86a2c32",
+      "binary": false
+    }
+  }
+}

@@ -18,25 +18,32 @@ export function slugify(title: string): string {
   return slug || "untitled";
 }
 
+/** Short, stable suffix that tells apart Pens whose titles give the same slug. */
+export function idSuffix(id: string): string {
+  return id.replace(/-/g, "").slice(-6).toLowerCase();
+}
+
 /**
  * Accepts a 2.0 cpid, a Classic hashid, or any codepen.io Pen URL and returns the Pen id.
- * Returns null when the input doesn't look like a Pen reference (e.g. a local slug).
+ * Returns null when the input doesn't look like a Pen id (e.g. a slug).
+ * Throws for URLs that don't contain a Pen id.
  */
 export function parsePenRef(input: string): string | null {
   const ref = input.trim();
   if (/^https?:\/\//i.test(ref)) {
-    let url: URL;
+    let url: URL | null = null;
     try {
       url = new URL(ref);
-    } catch {
-      return null;
-    }
-    const parts = url.pathname.split("/").filter(Boolean);
+    } catch {}
+    const parts = url?.pathname.split("/").filter(Boolean) ?? [];
     // 2.0 editor: /editor/<user>/pen/<penId>[/<versionId>]
     // Classic:    /<user>/pen|full|details|debug|embed/<hashid>
     const i = parts.findIndex((p) => ["pen", "full", "details", "debug", "embed", "live"].includes(p));
-    if (i >= 0 && parts[i + 1]) return parts[i + 1];
-    return null;
+    if (url && /(^|\.)codepen\.io$/i.test(url.hostname) && i >= 0 && parts[i + 1]) return parts[i + 1];
+    throw new UserError(
+      `Couldn't find a Pen id in ${ref}. Use the Pen's editor link (codepen.io/editor/<user>/pen/<id>) or ` +
+        `codepen.io/<user>/pen/<id>; preview, deployment and collection links don't include it.`,
+    );
   }
   if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ref)) return ref.toLowerCase();
   // Classic hashids are short mixed-case alphanumerics; slugs are lowercase with dashes.

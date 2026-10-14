@@ -13,7 +13,8 @@ Usage: npm run cp -- <command> [options]
                              --page <n>, --per-page <n> (max 100), --all
                              --sort updated|created|popularity, --asc / --desc
                              --search <text>, --tag <tag>, --editor V2|Classic
-  pull <id|url|slug>       Download a Pen into pens/<slug> (--as <slug>, --force)
+  pull <slug|id|url>       Download a Pen into pens/<slug> (--as <slug>, --force)
+                             slug: as shown by list; url: codepen.io editor or pen link
   pull --all               Download every Pen (--yes, --force, plus list filters and sorting)
   status [slug]            Show local and remote changes for one or all Pens
   push <slug>              Upload local changes to the Pen (--yes, --force)
