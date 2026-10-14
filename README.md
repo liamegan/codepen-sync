@@ -4,9 +4,9 @@ Pull your CodePen Pens into local folders, run them with [Vite](https://vite.dev
 
 ```
 pens/
-  manifold-mandala/          ← one folder per Pen
-    .codepen-sync.json       ← sync state (Pen id, last synced version, file hashes)
-    .codepen/pen.config.json ← CodePen's own config, synced like any other file
+  manifold-mandala/          - one folder per Pen
+    .codepen-sync.json       - sync state (Pen id, last synced version, file hashes)
+    .codepen/pen.config.json - CodePen's own config, synced like any other file
     index.html
     package.json
     src/main.js
@@ -40,7 +40,7 @@ npm run cp -- push <slug>                   # save local changes to CodePen
 | `pull --all`                     | Pulls every Pen (accepts `list`'s filters and sorting). It asks first, because this costs about 2 requests per Pen.                                                                                                                                                                                                                                                |
 | `status [slug]`                  | For each Pen, shows **clean**, **local changes**, **remote changes** or **diverged**, plus the changed files.                                                                                                                                                                                                                                                      |
 | `push <slug>`                    | Uploads added, changed and deleted files as one new version, waits for CodePen's build, then writes the saved files back locally (see below).                                                                                                                                                                                                                      |
-| `new <slug\|dir>`                | Creates a new 2.0 Pen from a folder, or from a pulled Classic Pen, and links the folder to it. `--title` names it. `--access Private` (or `Protected`, `Collaborators`, all PRO only) keeps it off your public profile.                                                                                                                                                                                                                                                                     |
+| `new <slug\|dir>`                | Creates a new 2.0 Pen from a folder, or from a pulled Classic Pen, and links the folder to it. `--title` names it. `--access Private` (or `Protected`, `Collaborators`, all PRO only) keeps it off your public profile.                                                                                                                                            |
 | `dev`, `build`, `preview <slug>` | Runs Vite on the Pen folder. `build` writes `pens/<slug>/dist`. `--port` sets the port.                                                                                                                                                                                                                                                                            |
 | `open <slug>`                    | Opens the Pen in the CodePen editor.                                                                                                                                                                                                                                                                                                                               |
 
