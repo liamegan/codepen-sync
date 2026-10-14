@@ -1,0 +1,24 @@
+{
+  "name": "codepen-sync",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sync CodePen Pens to local folders, run them with Vite, and push changes back.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "cp": "tsx cli/index.ts",
+    "dev": "tsx cli/index.ts dev",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "sass": "^1.105.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.4"
+  }
+}
